@@ -1,0 +1,26 @@
+build_requires: 
+  IPC::Run3: 0
+  RunApp: 0.13
+  Test::Output: 0
+distribution_type: module
+generated_by: Module::Install version 0.640
+license: unknown
+name: Pushmi
+no_index: 
+  directory: 
+    - inc
+    - t
+requires: 
+  App::CLI: 0.06
+  Cache::Memcached: 0
+  Log::Log4perl: 0
+  SVK: 2.0.0
+  SVN::Core: 1.004001
+  YAML::Syck: 0
+  version: 0
+version: !!perl/hash:version 
+  qv: 1
+  version: 
+    - 0
+    - 991
+    - 0

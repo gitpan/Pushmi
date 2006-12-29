@@ -1,0 +1,129 @@
+NAME
+    Pushmi - Subversion repository replication tool
+
+SYNOPSIS
+      pushmi mirror /var/db/my-local-mirror http://master.repository/svn
+      pushmi sync /var/db/my-local-mirror
+
+DESCRIPTION
+    Pushmi provides a mechanism for bidirectionally synchronizing Subversion
+    repositories. The main difference between Pushmi and other replication
+    tools is that Pushmi makes the "slave" repositories writable by normal
+    Subversion clients.
+
+CONFIGURATION
+    Set up your local repository
+        Create /etc/pushmi.conf and setup username and password. See
+        t/pushmi.conf for example.
+
+          pushmi mirror /var/db/my-local-mirror http://master.repository/svn
+
+    Bring the mirror up-to-date.
+          pushmi sync --nowait /var/db/my-local-mirror
+
+        Configure a cron job to run this command every 5 minutes.
+
+    Configure your local svn
+        Set up your svn server to serve /var/db/my-local-mirror at
+        "http://slave.repository/svn"
+
+    For your existing Subversion checkouts, you may now switch to the slave
+    using this command:
+
+      svn switch --relocate http://master.repository/svn http://slave.repository/svn
+
+    From there, you can use normal "svn" commands to work with your
+    checkout.
+
+AUTHENTICATION
+    The above section describes the minimum setup without authentication and
+    authorisation.
+
+    To support auth*, you need to start memcached on the "authproxy_port"
+    port specified in pushmi.conf. For exmaple:
+
+      memcached -p 7123 -dP /var/run/memcached.pid
+
+    For authz_svn-controlled master repository
+        You need to use an external mechanism to replicate the authz file
+        and add a "AuthzSVNAccessFile" directive in the slave's slave
+        "httpd.conf", along with whatever authentication modules and
+        configurations. You will need additional directives in "httpd.conf"
+        using mod_perl2:
+
+          # replace with your auth settings
+          AuthName "Subversion repository for projectX"
+          AuthType Basic
+          Require valid-user
+          # here are the additional config required for pushmi
+          PerlSetVar PushmiConfig /etc/pushmi.conf
+          PerlAuthenHandler Pushmi::Apache::AuthCache
+
+    For public-read master repository
+        You can defer the auth* to the master on write. Put the additional
+        config in "httpd.conf":
+
+          PerlSetVar SVNPath /var/db/my-local-mirror
+          PerlSetVar Pushmi /usr/local/bin/pushmi
+          PerlSetVar PushmiConfig /etc/pushmi.conf
+          <LimitExcept GET PROPFIND OPTIONS REPORT>
+            AuthName "Subversion repository for projectX"
+            AuthType Basic
+            Require valid-user
+            PerlAuthenHandler Pushmi::Apache::AuthCommit
+          </LimitExcept>
+
+CONFIG FILE
+    "pushmi" looks for /etc/pushmi.conf or wherever "PUSHMI_CONFIG" in
+    environment points to. Available options are:
+
+    username
+        The credential to use for mirroring.
+
+    password
+        The credential to use for mirroring.
+
+    authproxy_port
+        The port memcached is running on.
+
+    use_cached_auth
+        If pushmi should use the cached subversion authentication info.
+
+    Some mirror-related options are configurable in svk, in your
+    ~/.subversion/config's "[svk]" section:
+
+    ra-pipeline-delta-threshold
+        The size in bytes that pipelined sync should leave the textdelta in
+        a tempfile. Default is 2m.
+
+    ra-pipeline-buffer
+        The max number of revisions that pipelined sync should keep in
+        memory when it is still busy writing to local repository.
+
+LOGGING
+    "pushmi" uses Log::Log4perl as logging facility. Create
+    /etc/pushmi-log.conf. See t/pushmi-log.t as exmaple. See also
+    Log::Log4perl::Config for complete reference.
+
+LICENSE
+    Copyright 2006 Best Practical Solutions, LLC.
+
+    Licensed under the Apache License, Version 2.0 (the "License"); you may
+    not use this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+        http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing, software
+    distributed under the License is distributed on an "AS IS" BASIS,
+    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions and
+    limitations under the License.
+
+SUPPORT
+    To inquire about commercial support, please contact
+    sales@bestpractical.com.
+
+AUTHORS
+    Chia-liang Kao
+
