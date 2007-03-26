@@ -2,7 +2,6 @@
 build_requires: 
   IPC::Run3: 0
   RunApp: 0.13
-  Test::Output: 0
 distribution_type: module
 generated_by: Module::Install version 0.650
 license: unknown
@@ -26,5 +25,5 @@ version: !!perl/hash:version
   qv: 1
   version: 
     - 0
-    - 992
+    - 993
     - 0

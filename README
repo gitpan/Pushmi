@@ -51,6 +51,11 @@ CONFIGURATION
     You will also need to specify the full path of verify-mirror utility in
     the "verify_mirror" configuration option.
 
+    When the repository is in inconsistent state, users will be advised to
+    switch back to the master repository when trying to commit. The
+    inconsistent state is denoted by the "pushmi:inconsistent" revision
+    property on revision 0.
+
 AUTHENTICATION
     The above section describes the minimum setup without authentication and
     authorisation.

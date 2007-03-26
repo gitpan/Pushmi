@@ -21,7 +21,8 @@ sub run {
     $t->repos->fs->revision_prop(0, 'pushmi:auto-verify')
 	or return;
 
-    my $output = `/usr/local/bin/verify-mirror $repospath / $self->{revision}`;
+    my $verify_mirror = Pushmi::Config->config->{verify_mirror} || 'verify-mirror';
+    my $output = `$verify_mirror $repospath / $self->{revision}`;
 
     unless ($?) {
 	$logger->debug("[$repospath] revision $self->{revision} verified");
@@ -30,7 +31,7 @@ sub run {
 
     $logger->logdie("[$repospath] can't verify: $!") if $? == -1;
 
-    $t->repos->fs->change_rev_prop(0, 'pushmi:inconsistent', $self->revision);
+    $t->repos->fs->change_rev_prop(0, 'pushmi:inconsistent', $self->{revision});
 
     $logger->logdie("[$repospath] can't verify: $output");
 }

@@ -11,7 +11,6 @@ requires 'Log::Log4perl'    => '0';
 
 build_requires 'IPC::Run3'    => '0';
 build_requires 'RunApp'       => '0.13';
-build_requires 'Test::Output' => '0';
 
 install_script 'bin/pushmi';
 

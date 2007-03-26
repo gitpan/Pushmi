@@ -1,6 +1,6 @@
 package Pushmi;
 use strict;
-use version; our $VERSION = qv(0.99_2);
+use version; our $VERSION = qv(0.99_3);
 
 1;
 

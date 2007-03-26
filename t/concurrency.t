@@ -4,7 +4,6 @@ use Test::More;
 use SVK::Test;
 use Pushmi::Test;
 use Pushmi::Mirror;
-use Test::Output;
 use FindBin;
 
 plan tests => 10;
