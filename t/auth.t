@@ -6,7 +6,7 @@ use SVK::Test;
 use Pushmi::Test;
 BEGIN { check_apache() }
 
-use Test::More tests => 9;
+use Test::More tests => 11;
 
 use File::Spec::Functions qw(rel2abs catdir catfile);
 
@@ -112,3 +112,12 @@ is_svn_output(['ci', '--non-interactive', '--no-auth-cache', '--username' => 'te
 	      ['Sending        t/checkout/auth-svn/fileA.txt',
 	       'Transmitting file data .',
 	       'Committed revision 6.']);
+
+is_svn_output(['rm', "$copath/mmmm"],
+	      ['D         t/checkout/auth-svn/mmmm']);
+
+
+is_svn_output(['ci', '--non-interactive', '--no-auth-cache', '--username' => 'test', '--password' => 'test', -m => 'commit a single file', $copath],
+	      ['Deleting       t/checkout/auth-svn/mmmm',
+	       '',
+	       'Committed revision 7.']);

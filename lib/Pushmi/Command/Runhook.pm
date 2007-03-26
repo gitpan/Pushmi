@@ -15,6 +15,7 @@ sub run {
     $self->canonpath($repospath);
     Carp::confess "txnname required" unless $self->{txnname};
     my $repos = SVN::Repos::open($repospath) or die "Can't open repository: $@";
+
     my $fs = $repos->fs;
     my $txn = $fs->open_txn($self->{txnname}) or die 'no such txn';
     if ($txn->prop('svk:commit')) {
@@ -28,6 +29,7 @@ sub run {
 #    my $anchor = $self->_find_txn_anchor($txn_root);
 #    warn "doing $self->{txnname}: ".join(',', keys %{ $txn_root->paths_changed });
     my $t = $self->root_svkpath($repos);
+    $self->ensure_consistency($t);
 
     # XXX: if we reentrant, the mirror will be in deadlock.
     $AUTHOR = $txn->prop('svn:author');
@@ -69,15 +71,19 @@ sub run {
     my $error;
     ${ $arg{post_handler} } = sub {
 	$logger->info("[$repospath] committed as $_[0]");
-	$txn->change_prop( 'svk:committed-by' => $mirror->_lock_token );
+	my $token = join(':', $mirror->repos->path, $mirror->_lock_token);
+	$txn->change_prop( 'svk:committed-by' => $token );
         $mirror->_backend->_revmap_prop( $txn, $_[0] );
         $sync_upto = $_[0] - 1;
+        $logger->debug("post handle decides to sync upto $sync_upto");
+
         return 0;
     };
 
     {
 	local $SVN::Error::handler = sub {
 	    $_[0]->clear;
+            $logger->debug('Fail to replay: '.Carp::longmess);
 	    die $_[0]->message."\n";
 	};
 
@@ -95,14 +101,20 @@ sub run {
     delete $mirror->_backend->{_cached_ra};
     $self->setup_auth(Pushmi::Command::Mirror->can('pushmi_auth'));
     my ($first, $last);
+
+    # if we failed on out-of-date, we might not have reached the
+    # close_edit that we have the lock required for the sync later,
+    $mirror->lock unless $mirror->_locked;
+
     $mirror->_backend->_mirror_changesets( $sync_upto,
         sub { $first ||= $_[0]; $last = $_[0] } );
     $logger->info("[$repospath] sync revision $first to $last") if $first;
     if ($error) {
+        $logger->debug("Unlock on failure");
 	$mirror->unlock;
 	die $error;
     }
-    die $error if $error;
+
     exit 0;
 }
 
@@ -120,6 +132,10 @@ sub _get_password {
 
 sub pushmi_auth {
     my ($cred, $realm, $default_username, $may_save, $pool) = @_;
+    my $config = Pushmi::Config->config;
+
+    my $func = Pushmi::Command::Mirror->can('pushmi_auth');
+    goto $func if $config->{use_shared_commit};
 
     $logger->debug("Try to authenticate as $AUTHOR");
     my $password = _get_password;

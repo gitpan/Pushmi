@@ -4,7 +4,6 @@ use Test::More;
 use SVK::Test;
 use Pushmi::Test;
 use Pushmi::Mirror;
-use Test::Output;
 use FindBin;
 
 plan tests => 28;
@@ -25,6 +24,7 @@ my $uri = uri($srepospath.($spath eq '/' ? '' : $spath));
 my ($repospath, $path, $repos) = $xd->find_repos ('//', 1);
 ok( Pushmi::Mirror->install_hook($repospath) );
 
+start_memcached();
 my $muri = uri($repospath.($path eq '/' ? '' : $path));
 
 $svk->mirror('//', $uri);

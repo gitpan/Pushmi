@@ -12,6 +12,16 @@ DESCRIPTION
     Subversion clients.
 
 CONFIGURATION
+    Install and run memcached
+        We use memcached for better atomic locking for mirrors, as the
+        subversion revision properties used for locking in SVK is
+        insufficient in terms of atomicity.
+
+        You need to start memcached on the "authproxy_port" port specified
+        in pushmi.conf. For exmaple:
+
+          memcached -p 7123 -dP /var/run/memcached.pid
+
     Set up your local repository
         Create /etc/pushmi.conf and setup username and password. See
         t/pushmi.conf for example.
@@ -35,14 +45,27 @@ CONFIGURATION
     From there, you can use normal "svn" commands to work with your
     checkout.
 
+    Setup auto-verify
+    You can optionally enable auto-verify after every commit by setting
+    revision property "pushmi:auto-verify" on revision 0 for the repository.
+    You will also need to specify the full path of verify-mirror utility in
+    the "verify_mirror" configuration option.
+
 AUTHENTICATION
     The above section describes the minimum setup without authentication and
     authorisation.
 
-    To support auth*, you need to start memcached on the "authproxy_port"
-    port specified in pushmi.conf. For exmaple:
-
-      memcached -p 7123 -dP /var/run/memcached.pid
+    For svn:// access
+        You can we svn:// access for Pushmi, but there are some limitations
+        for it as of the current implementation. First of all it will have
+        to be using the shared credential when committing to the master. So
+        you will need to make sure the user is allowed to write to the
+        master. And as a side-effect, the commits via the slave will be
+        committed by the shared user on the master. You can however use some
+        post-commit hook or other means to set the "svn:author" revision
+        property afterwards. You will need to make sure "use_shared_commit"
+        is enabled, and if you are using svn+ssh://, make sure the user
+        pushmi runs as has the correct ssh key to commit to the master.
 
     For authz_svn-controlled master repository
         You need to use an external mechanism to replicate the authz file
@@ -89,6 +112,12 @@ CONFIG FILE
     use_cached_auth
         If pushmi should use the cached subversion authentication info.
 
+    use_shared_commit
+        Use the "username" and "password" for committing to master.
+
+    verify_mirror
+        Path to verify-mirror.
+
     Some mirror-related options are configurable in svk, in your
     ~/.subversion/config's "[svk]" section:
 
@@ -125,5 +154,5 @@ SUPPORT
     sales@bestpractical.com.
 
 AUTHORS
-    Chia-liang Kao
+    Chia-liang Kao <clkao@bestpractical.com<gt>
 

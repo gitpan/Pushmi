@@ -1,5 +1,6 @@
 bin/pushmi
 CHANGES
+doc/intro.pod
 inc/ExtUtils/AutoInstall.pm
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
@@ -23,6 +24,7 @@ lib/Pushmi/Command/Runhook.pm
 lib/Pushmi/Command/Sync.pm
 lib/Pushmi/Command/Tryauth.pm
 lib/Pushmi/Command/Unlock.pm
+lib/Pushmi/Command/Verify.pm
 lib/Pushmi/Config.pm
 lib/Pushmi/Editor/Locker.pm
 lib/Pushmi/Mirror.pm
@@ -42,3 +44,5 @@ t/concurrency.t
 t/memcached.pid
 t/pushmi-log.conf
 t/pushmi.conf
+t/verify.t
+utils/verify-mirror

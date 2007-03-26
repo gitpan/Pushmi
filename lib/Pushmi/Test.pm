@@ -123,7 +123,9 @@ sub start_memcached {
     $memcached_pid = <$fh>;
     diag $memcached_pid;
     chomp $memcached_pid;
-    push @CLEANUP, sub { kill 'TERM', $memcached_pid if $memcached_pid };
+    my $pid = $$;
+    push @CLEANUP, sub { return unless $$ == $pid;
+			 diag 'stopping memcached'; kill 'TERM', $memcached_pid if $memcached_pid };
 }
 
 END {

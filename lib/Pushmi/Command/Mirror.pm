@@ -9,10 +9,57 @@ use Pushmi::Config;
 use Path::Class;
 use SVN::Mirror;
 use SVK::Config;
+use SVK::Mirror;
 use SVK::XD;
 use SVN::Delta;
 use SVK::I18N;
 use UNIVERSAL::require;
+
+my $logger = Pushmi::Config->logger('pushmi.svkmirror');
+{
+no warnings 'redefine';
+my $memd = Pushmi::Config->memcached;
+
+*SVK::Mirror::lock = sub {
+    my ($self)  = @_;
+    my $fs      = $self->repos->fs;
+    my $token = join(':', $self->repos->path, $self->_lock_token );
+    my $content = $self->_lock_content;
+    my $where = join( ' ', ( caller(0) )[ 0 .. 2 ] );
+
+    my $lock_message = $self->_lock_message;
+LOCKED:
+    {
+	my $pool = SVN::Pool->new_default;
+	my $trial = 0;
+        while (1) {
+	    $pool->clear;
+	    my $ret;
+	    last LOCKED if $ret = $memd->add( $token, $content );
+            my $who = $memd->get( $token ) or next;
+	    last if $who eq $content;
+	    $logger->warn("lock held by $who...") unless $trial++ % 60;
+	    $lock_message->($self, $who);
+            sleep 1;
+        }
+    }
+    $logger->debug("locked by ".$token);
+    $self->_locked(1);
+};
+
+*SVK::Mirror::unlock = sub {
+    my ( $self, $force ) = @_;
+    my $token = join(':', $self->repos->path, $self->_lock_token );
+    my $who = $memd->get( $token );
+    if ($force || $self->_locked ) {
+	my $ret = $memd->delete( $token );
+	$logger->debug("unlock result: $ret");
+	$self->_locked(0);
+    }
+};
+
+
+}
 
 sub options {
     ('runhook'   => 'runhook',
@@ -75,7 +122,7 @@ sub pushmi_auth {
 
 sub canonpath {
     my $self = shift;
-    $_[0] = Path::Class::Dir->new($_[0])->stringify;
+    $_[0] = Path::Class::Dir->new($_[0])->absolute->stringify;
 }
 
 sub run_init {
@@ -108,6 +155,25 @@ sub run_init {
 
     return;
 }
+
+sub ensure_consistency {
+    my ($self, $t) = @_;
+    my $repos = $t->repos;
+    my $revision = $repos->fs->revision_prop(0, 'pushmi:inconsistent')
+	or return;
+
+    my $repospath = $repos->path;
+
+    $logger->info("[$repospath] ".ref($self).' blocked by inconsistency');
+
+    my ($mirror) = $t->is_mirrored;
+    my $master = $mirror->url;
+
+    die "Pushmi slave in inconsistency.  Please use the master repository at $master\nand contact your administrator.  Sorry for the inconveniences.\n";
+
+}
+
+
 
 =head1 NAME
 

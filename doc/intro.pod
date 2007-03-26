@@ -1,0 +1,250 @@
+=head1 Pushmi
+
+Subversion replication system based on SVK
+
+
+B<Chia-liang Kao> /  B<高嘉良> <L<clkao@clkao.org>>
+
+I<Best Practical Solutions, LLC>
+
+=head1 Modern Software Development
+
+=over
+
+=item *
+
+Test-driven.
+
+=item *
+
+Geographically distributed.
+
+=item *
+
+Version control is crucial.
+
+=back
+
+=head1 Subversion
+
+=over
+
+=item *
+
+Enterprise-standard for distributed development.
+
+=item *
+
+Fixed CVS problems.
+
+=item *
+
+Branch is easy.
+
+=item *
+
+However
+
+=over
+
+=item *
+
+Centralised.
+
+=item *
+
+No good merge support.
+
+=back
+
+=back
+
+=head1 The Problem
+
+=over
+
+=item *
+
+The Internet isn't as fast as we want it to be
+
+=item *
+
+... or isn't as reliable as we thought.
+
+=item *
+
+and there can be...
+
+=back
+
+=head1 Earthquakes
+
+G<067.jpg>
+
+=head1 The Subversion Motto
+
+=over
+
+=item *
+
+Network is expensive
+
+=item *
+
+Disks are cheap
+
+=back
+
+=head1 We think
+
+
+=over
+
+=item *
+
+Network, Disks, CPUs are cheap
+
+=item *
+
+Developers are expensive
+
+=back
+
+=head1 Why this matters?
+
+=over
+
+=item *
+
+Developers spent more time on the tools than development ==  B<BAD>
+
+=item *
+
+Single Point of Failure ==  B<BAD>
+
+=item *
+
+Developers Unable to Produce ==  B<WORSE>
+
+=back
+
+=head1 The Solution
+
+=over
+
+=item *
+
+Pushmi creates replicas of master repository in branch offices.
+
+=item *
+
+Transparent to the users.
+
+=item *
+
+NO change to existing infrastructure and process.
+
+=item *
+
+Too good to be true?
+
+=back
+
+=head1 Conflicts?
+
+FAQ: How do you handle simultaneous commits from different slaves and master?
+
+=over
+
+=item *
+
+We don't.
+
+=item *
+
+The commits are relayed back to the master.
+
+=item *
+
+It's essentially like users are committing directly, without going through replicas.
+
+=item *
+
+And Subversion guards the transaction cleanness for us.
+
+=back
+
+=head1 The architecture
+
+G<diagram-v3.png>
+
+=head1 Case Study
+
+A leading company in the game industry
+
+=over
+
+=item *
+
+70 offices around the world
+
+=item *
+
+... including Beijing, Saigon.
+
+=item *
+
+Some with very limited internet connection.
+
+=item *
+
+Large amount of graphical data.
+
+=item *
+
+Users wait for "svn update" over slow and saturated network.
+
+=back
+
+=head1 Case Study (Cont.)
+
+=over
+
+=item *
+
+Eliminated 200ms+ latency for read-only operations from places like Romania
+
+=item *
+
+... for update, viewing logs, diff, etc.
+
+=item *
+
+Commit performance is only slightly slower.
+
+=item *
+
+When master repository or VPN is down:
+
+=over
+
+=item *
+
+Developers can still work with read-only operations.
+
+=item *
+
+along with SVK, can also commits and perform merge later.
+
+=back
+
+=head1 Questions?
+
+=head1 Thank you
+
+Available on code.bestpractical.com
+
+For support and consultancy, contact sales@bestpractical.com
+
+=cut
+

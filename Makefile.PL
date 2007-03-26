@@ -2,7 +2,7 @@ use inc::Module::Install;
 name 'Pushmi';
 version_from 'lib/Pushmi.pm';
 requires 'version'          => '0';
-requires 'SVN::Core'        => '1.004001';
+requires 'SVN::Core'        => '1.004003';
 requires 'SVK'              => '2.0.0';
 requires 'App::CLI'         => '0.06';
 requires 'Cache::Memcached' => '0';

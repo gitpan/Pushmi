@@ -1,7 +1,10 @@
 package Pushmi::Command::Sync;
+use strict;
+use warnings;
 use base 'Pushmi::Command::Mirror';
 use SVK::I18N;
 
+my $memd = Pushmi::Config->memcached;
 my $logger = Pushmi::Config->logger('pushmi.sync');
 
 sub options {
@@ -14,14 +17,15 @@ sub run {
     my $repos = SVN::Repos::open($repospath) or die "Can't open repository: $@";
 
     my $t = $self->root_svkpath($repos);
+    $self->ensure_consistency($t);
 
     $self->setup_auth;
     my ($mirror) = $t->is_mirrored;
 
     if ($self->{nowait}) {
-	my $token   = $mirror->_lock_token;
-	if (my $content = $t->repos->fs->revision_prop( 0, $token )) {
-	    print loc("Mirror is locked by %1, skipping.\n", $content);
+	my $token   = join(':', $mirror->repos->path, $mirror->_lock_token);
+	if (my $who = $memd->get( $token ) ) {
+	    print loc("Mirror is locked by %1, skipping.\n", $who);
 	    return;
 	}
     }

@@ -14,6 +14,7 @@ my ($xd, $svk) = build_test('test');
 our $output;
 
 my ($srepospath, $spath, $srepos) = $xd->find_repos ('/test/', 1);
+start_memcached();
 
 $svk->mkdir('-m', 'init', '/test/A');
 
@@ -83,3 +84,4 @@ is_output($svk, 'pg', ['svn:log', '--revprop', '-r3', '/test/'],
 is($srepos->fs->youngest_rev, 3, 'committed via hook');
 
 is($repos->fs->youngest_rev, 3, 'committed via hook');
+

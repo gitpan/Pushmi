@@ -21,4 +21,4 @@ tmon\.out$
 t/checkout/*
 t/*.pid
 tmp/*
-
+relnotes*

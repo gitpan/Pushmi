@@ -31,6 +31,7 @@ END
 export SVKNOSVNCONFIG=1
 export PUSHMI_CONFIG=$ENV{PUSHMI_CONFIG}
 $perl $pushmi unlock \$1 --revision \$2
+$perl $pushmi verify \$1 --revision \$2
 
 END
 
