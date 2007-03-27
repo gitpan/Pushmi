@@ -6,6 +6,7 @@ use strict;
 no warnings 'once';
 use SVK;
 use SVK::XD;
+use SVK::Util 'abs2rel';
 use URI::Escape 'uri_escape';
 use Getopt::Long;
 
@@ -15,7 +16,7 @@ my $verbose;
 die unless GetOptions("r|revision=s@" => \$revspec,
 		      "v|verbose"     => \$verbose,);
 
-my ($repospath, $path) = @ARGV;
+my ($repospath, $path, $revision) = @ARGV;
 
 die "repospath required.\n" unless $repospath;
 die "path required.\n" unless $path;
@@ -24,7 +25,7 @@ my $repos = SVN::Repos::open($repospath) or die $!;
 my $depot = SVK::Depot->new( {repos => $repos, repospath => $repospath, depotname => ''} );
 
 my $t = SVK::Path->real_new( { depot => $depot, path => $path } )->refresh_revision;
-my $r = $revspec ? (bless { revspec => $revspec}, 'SVK::Command')->parse_revlist($t) : [0];
+my $r = $revspec ? (bless { revspec => $revspec}, 'SVK::Command')->parse_revlist($t) : [$revision];
 $r->[1] ||= $r->[0];
 
 my ($m, $mpath) = $t->is_mirrored;
@@ -35,7 +36,6 @@ $r = [ map { $m->find_changeset($_) or die "Can't find remote revision for ".$t-
 require Pushmi::Command::Mirror;
 Pushmi::Command::Mirror->setup_auth;
 my $ra = $rabackend->_new_ra;
-
 require SVK::Command::Log;
 $ra->get_log([''], $r->[0], $r->[1], 0,
 	    1, 1,
@@ -57,7 +57,7 @@ $ra->get_log([''], $r->[0], $r->[1], 0,
 
         for my $remotepath ( sort keys %$paths ) {
             $pool->clear;
-            my $localpath = Path::Class::Dir->new_foreign('Unix', $path)->subdir( $remotepath );
+	    my $localpath = abs2rel($remotepath, $m->source_path => $path, '/');
             my $local     = delete $changed->{$localpath}
                 or die "$localpath is not in changes";
             my $action = $SVK::Command::Log::chg->[ $local->change_kind ];

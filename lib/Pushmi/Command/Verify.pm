@@ -29,7 +29,7 @@ sub run {
 	return;
     }
 
-    $logger->logdie("[$repospath] can't verify: $!") if $? == -1;
+    $logger->logdie("[$repospath] can't run verify: $!") if $? == -1;
 
     $t->repos->fs->change_rev_prop(0, 'pushmi:inconsistent', $self->{revision});
 

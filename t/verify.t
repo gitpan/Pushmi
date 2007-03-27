@@ -5,35 +5,37 @@ use SVK::Test;
 use Pushmi::Test;
 use FindBin;
 use File::Temp;
-use SVK::Util 'can_run';
+use SVK::Util qw(can_run abs_path);
 use File::Copy 'copy';
+use YAML::Syck;
 my $f;
 my $lf;
 BEGIN {
-    my $verify_mirror = can_run('verify-mirror');
+    $ENV{PATH} = abs_path("$FindBin::Bin/../utils:").$ENV{PATH};
 
+    my $verify_mirror = can_run('verify-mirror');
     plan skip_all => "Can't find verify-mirror" unless $verify_mirror;
 
     $f = File::Temp->new(TEMPLATE => 'pushmiXXXX', DIR => File::Spec->tmpdir);
 
     $ENV{PUSHMI_CONFIG} = $f->filename;
-    print $f "---
-username: test
-password: test
-authproxy_port: 8123
-verify_mirror: $verify_mirror
 
-";
+    my $perl = join(' ', $^X, map { "'-I$_'" } @INC);
+    my $config = { username => 'test',
+		   password => 'test',
+		   authproxy_port => 8123,
+		   verify_mirror => "$perl $verify_mirror"};
+
+    print $f Dump($config);
 
     $lf = $f->filename; $lf =~ s/pushmi/pushmi-log/;
     copy 't/pushmi-log.conf', $lf;
-
 }
-END { unlink $lf }
+my $pid = $$;
 
 use Pushmi::Mirror;
 
-plan tests => 7;
+plan tests => 8;
 
 my ($xd, $svk) = build_test('test');
 
@@ -79,6 +81,14 @@ is_svn_output(['ci', -m => 'add fromsvn'],
 	       'Transmitting file data .',
 	       'Committed revision 2.']);
 
+
+$svk->mkdir('-m', 'more dir', '/test/newdir');
+is_output($svk, 'sync', ['//'],
+	  ["Syncing $uri",
+           'Retrieving log information from 3 to 3',
+	   'Committed revision 3 from revision 3.']);
+
+
 $depot->repos->fs->change_rev_prop(0, 'pushmi:inconsistent', '2');
 
 append_file("fromsvn.txt", "orz\n");
@@ -90,4 +100,6 @@ is_svn_output(['ci', -m => 'add fromsvn'],
 	       q|svn: 'pre-commit' hook failed with error output:|,
 	       "Pushmi slave in inconsistency.  Please use the master repository at $uri",
 	       'and contact your administrator.  Sorry for the inconveniences.', '']);
-diag $output;
+
+
+END { return unless $$ == $pid; wait; unlink $lf }
