@@ -25,7 +25,7 @@ sub run {
     if ($self->{nowait}) {
 	my $token   = join(':', $mirror->repos->path, $mirror->_lock_token);
 	if (my $who = $memd->get( $token ) ) {
-	    print loc("Mirror is locked by %1, skipping.\n", $who);
+	    print loc("Mirror on $repospath is locked by %1, skipping.\n", $who);
 	    return;
 	}
     }
@@ -40,5 +40,19 @@ sub run {
 
     return;
 }
+
+=head1 NAME
+
+Pushmi::Command::Sync - synchronize pushmi mirrors
+
+=head1 SYNOPSIS
+
+ sync URL
+
+=head1 OPTIONS
+
+ --nowait             : Don't wait on lock.  Bail out immediately.
+
+=cut
 
 1;

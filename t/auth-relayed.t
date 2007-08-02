@@ -26,6 +26,13 @@ my $slavedepot = $xd->find_depot('slave');
 my $apache_root = rel2abs(catdir ('t', 'apache_master'));
 my ($passwd, $policy) = map { catfile($apache_root, $_) }
                           qw/svnpasswd svnpolicy/;
+
+my ( $master, $master_url ) = get_dav_server(
+    apache_root => rel2abs( catdir( 't', 'apache_master' ) ),
+    repospath   => $masterdepot->repospath,,
+    map { $_ => catfile( $apache_root, $_ ) } qw/svnpasswd svnpolicy/
+);
+diag $master_url;
 overwrite_file($passwd, "test:LM9XDLRiC7OUE
 mirror:TUcTg/K0XfIcI
 "); # test: test, mirror: secret
@@ -41,14 +48,6 @@ test = rw
 
 });
 
-my ( $master, $master_url ) = get_dav_server(
-    apache_root => rel2abs( catdir( 't', 'apache_master' ) ),
-    repospath   => $masterdepot->repospath,,
-    map { $_ => catfile( $apache_root, $_ ) } qw/svnpasswd svnpolicy/
-);
-diag $master_url;
-
-
 my $perl = join(' ', $^X, map { "'-I$_'" } abs_path(@INC));
 my $pushmi = can_run('pushmi') or die "can't find pushmi";
 my ( $slave, $slave_url ) = get_dav_server(
@@ -56,13 +55,17 @@ my ( $slave, $slave_url ) = get_dav_server(
     repospath   => $slavedepot->repospath,
     extra_modules => ['perl'],
     extra_config => qq{
+
 PerlSetVar SVNPath @{[$slavedepot->repospath]}
 PerlSetVar PushmiConfig $FindBin::Bin/pushmi.conf
 PerlSetVar Pushmi "}.("$perl $pushmi").qq{"
 <LimitExcept GET PROPFIND OPTIONS REPORT>
-#AuthAuthoritative off
 Require valid-user
+[% IF AP2_VERSION == '2.2' %]
+AuthBasicProvider Pushmi::Apache::RelayProvider
+[% ELSE %]
 PerlAuthenHandler Pushmi::Apache::AuthCommit
+[% END %]
 </LimitExcept>
 },
 );
@@ -80,9 +83,9 @@ start_memcached();
 my ($perlbal_url, $perlbal_port) = ($slave_url, 5009);
 diag $perlbal_url;
 
-run_pushmi('mirror', '--init', $slavedepot->repospath, $master_url);
+run_pushmi('mirror', $slavedepot->repospath, $master_url);
 system('svn', 'mkdir', '--non-interactive', '--no-auth-cache', '--username' => 'mirror', '--password' => 'secret', -m => 'mkdir', "$master_url/X");
-run_pushmi('mirror', '--sync', $slavedepot->repospath);
+run_pushmi('sync', $slavedepot->repospath);
 
 my ($copath,  $corpath)  = get_copath('auth-relayed-svn');
 

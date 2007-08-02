@@ -2,7 +2,6 @@ package Pushmi::Command::Mirror;
 use strict;
 use warnings;
 use base 'Pushmi::Command';
-use constant subcommands => qw(runhook sync tryauth);
 
 use Pushmi::Mirror;
 use Pushmi::Config;
@@ -38,12 +37,13 @@ LOCKED:
 	    last LOCKED if $ret = $memd->add( $token, $content );
             my $who = $memd->get( $token ) or next;
 	    last if $who eq $content;
-	    $logger->warn("lock held by $who...") unless $trial++ % 60;
+	    $logger->warn('['.$self->repos->path."] lock held by $who...")
+		unless $trial++ % 60;
 	    $lock_message->($self, $who);
             sleep 1;
         }
     }
-    $logger->debug("locked by ".$token);
+    $logger->debug('['.$self->repos->path."] locked by ".$token);
     $self->_locked(1);
 };
 
@@ -53,7 +53,7 @@ LOCKED:
     my $who = $memd->get( $token );
     if ($force || $self->_locked ) {
 	my $ret = $memd->delete( $token );
-	$logger->debug("unlock result: $ret");
+	$logger->debug('['.$self->repos->path."] unlock result: $ret");
 	$self->_locked(0);
     }
 };
@@ -61,13 +61,7 @@ LOCKED:
 
 }
 
-sub options {
-    ('runhook'   => 'runhook',
-     'init'      => 'init',
-     'tryauth'   => 'tryauth',
-     'sync'      => 'sync',
-     'txnname=s' => 'txnname')
-}
+sub options { () }
 
 sub run {
     my $self = shift;
@@ -114,6 +108,8 @@ sub setup_auth {
 sub pushmi_auth {
     my ($cred, $realm, $default_username, $may_save, $pool) = @_;
     my $config = Pushmi::Config->config;
+    $logger->logdie("unable to get username from config file.")
+	unless defined $config->{username};
     $cred->username($config->{username});
     $cred->password($config->{password});
     $cred->may_save(0);
@@ -173,25 +169,13 @@ sub ensure_consistency {
 
 }
 
-
-
 =head1 NAME
 
-Pushmi::Command::Mirror - manage pushmi mirrors
+Pushmi::Command::Mirror - initialize pushmi mirrors
 
 =head1 SYNOPSIS
 
- mirror --init REPOSPATH URL
- mirror --sync REPOSPATH
- mirror --runhook REPOSPATH
-
-=head1 OPTIONS
-
- --init            : initialize pushmi mirror on REPOSPATH.
-                     this installs the pre-commit-hook.
-
- --runhook         : run pre-commit-hook. do not use manually.
- --txnname         : txn used for hook.
+ mirror REPOSPATH URL
 
 =cut
 

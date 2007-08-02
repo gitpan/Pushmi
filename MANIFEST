@@ -1,6 +1,5 @@
 bin/pushmi
 CHANGES
-doc/intro.pod
 inc/ExtUtils/AutoInstall.pm
 inc/Module/AutoInstall.pm
 inc/Module/Install.pm
@@ -17,6 +16,7 @@ inc/Module/Install/WriteAll.pm
 lib/Pushmi.pm
 lib/Pushmi/Apache/AuthCache.pm
 lib/Pushmi/Apache/AuthCommit.pm
+lib/Pushmi/Apache/RelayProvider.pm
 lib/Pushmi/Command.pm
 lib/Pushmi/Command/Help.pm
 lib/Pushmi/Command/Mirror.pm
@@ -41,7 +41,6 @@ t/auth-relayed.t
 t/auth.t
 t/basic.t
 t/concurrency.t
-t/memcached.pid
 t/pushmi-log.conf
 t/pushmi.conf
 t/verify.t

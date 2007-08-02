@@ -90,10 +90,15 @@ sub get_dav_server {
         documentroot     => '/tmp',
         report           => 1,
         apxs             => $apxs,
-        required_modules => [ "dav", "dav_svn", "authz_svn", "log_config", "auth", @{$args{extra_modules} || []} ],
         config_block     => ($args{prelude_config} || '').
 qq{
 KeepAlive On
+# [% AP2_VERSION %]
+[% IF AP2_VERSION == '2.2' %]
+<IfModule mod_perl.c>
+PerlLoadModule Apache::AuthenHook
+</IfModule>
+[% END %]
 <Location /svn>
 DAV svn
 SVNPath $args{repospath}
@@ -106,7 +111,22 @@ AuthUserFile $args{svnpasswd}\n" : '' ) .
 ($args{extra_config} || '').
 q{</Location>
 });
-    $apache->build;
+    my $ret = `$apache->{httpd} -V`;
+    my ($ap_version) = $ret =~ m{version: Apache/([\d.]+)};
+
+    $args{extra_modules} ||= [];
+    if ($ap_version =~ m/^2\.2/) {
+	$ap_version = '2.2';
+	push @{$args{extra_modules}}, "auth_basic", "authn_file", "authz_user";
+    }
+    else {
+	$ap_version = '2.0';
+	push @{$args{extra_modules}}, "auth";
+    }
+
+    $apache->build({ AP2_VERSION => $ap_version,
+		     required_modules => [ "dav", "dav_svn", "authz_svn", "log_config", @{$args{extra_modules}}]});
+
     push @CLEANUP, sub { $apache->stop };
     return ($apache, "http://localhost:$apache->{port}/svn");
 }
@@ -114,7 +134,8 @@ q{</Location>
 sub start_memcached {
     my $port = Pushmi::Config->config->{authproxy_port};
     my $memcached_pid;
-    my $memcached = can_run('memcached');
+    my $memcached = can_run('memcached')
+	or die "Can't find memcached";
 
     system($memcached, -p => $port, qw(-l 127.0.0.1 -dP), abs_path("t/memcached.pid"));
     die $! if $?;

@@ -38,8 +38,8 @@ sub run {
     # retrieve from memcached as soon as possible, as get_editor might
     # delay because of the server latency of the first response
     _get_password();
-    my ($editor, $inspector, %arg) = $t->get_editor(callback => sub {
- },
+    my ($editor, $inspector, %arg) = $t->get_editor(notee => 1,
+						    callback => sub {},
 						    caller => '',
 						    message  => $txn->prop('svn:log'));
     my ($mirror) = $t->is_mirrored;
@@ -93,7 +93,8 @@ sub run {
         };
 	if ($error = $@) {
 	    $logger->info("[$repospath] Failed to replay txn to mirror: $error");
-	    $txn->change_prop('pushmi:dead', '*');
+            eval { $txn->change_prop('pushmi:dead', '*'); 1 }
+                or $logger->warn("[$repospath] Unable to mark dead txn as dead.");
 	}
     }
 
@@ -121,6 +122,10 @@ sub run {
 my $_cached_password;
 sub _get_password {
     return $_cached_password if defined $_cached_password;
+
+    $logger->error_die("unable to get author info from txn")
+	unless defined $AUTHOR;
+
     my $memd = Pushmi::Config->memcached;
     my $password = $memd->get($AUTHOR);
 
@@ -168,5 +173,26 @@ sub _find_txn_anchor {
 
     return $anchor->stringify;
 }
+
+=head1 NAME
+
+Pushmi::Command::Runhook - transaction preprocessing
+
+=head1 SYNOPSIS
+
+ runhook --txnname NAME
+
+=head1 OPTIONS
+
+ --txnname             : The transaction name to work on
+
+=head1 DESCRIPTION
+
+The command tries to replay the txn to the master, and prepares the
+transaction to be ready to be committed by svn.
+
+This is not intended to be invoked manually.
+
+=cut
 
 1;

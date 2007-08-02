@@ -19,6 +19,7 @@ t/apache_*
 \.diff$
 tmon\.out$
 t/checkout/*
-t/*.pid
+t/memcached.pid
 tmp/*
 relnotes*
+doc/

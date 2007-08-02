@@ -20,3 +20,10 @@ auto_install();
 makemaker_args( test => { TESTS => join ' ', "t/*.t", "t/*/*.t"});
 
 WriteAll;
+
+warn <<EOF;
+**********************************************************************
+***** If you are using apache 2.2, you need to have Apache::AuthenHook
+***** installed.  See README for configuration help.
+
+EOF

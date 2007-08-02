@@ -1,6 +1,6 @@
 package Pushmi;
 use strict;
-use version; our $VERSION = qv(0.99_4);
+use version; our $VERSION = qv(0.99_5);
 
 1;
 
@@ -66,13 +66,19 @@ From there, you can use normal C<svn> commands to work with your checkout.
 
 You can optionally enable auto-verify after every commit by setting
 revision property C<pushmi:auto-verify> on revision 0 for the
-repository.  You will also need to specify the full path of
-F<verify-mirror> utility in the C<verify_mirror> configuration option.
+repository, Which can also be done with:
+
+  pushmi verify --enable /path/to/repository
+
+You will also need to specify the full path of F<verify-mirror>
+utility in the C<verify_mirror> configuration option.
 
 When the repository is in inconsistent state, users will be advised to
 switch back to the master repository when trying to commit.  The
 inconsistent state is denoted by the C<pushmi:inconsistent> revision
-property on revision 0.
+property on revision 0, and can be cleared with:
+
+  pushmi verify --correct /path/to/repository
 
 =head1 AUTHENTICATION
 
@@ -122,7 +128,10 @@ config in C<httpd.conf>:
     AuthName "Subversion repository for projectX"
     AuthType Basic
     Require valid-user
+    # for apache 2.0
     PerlAuthenHandler Pushmi::Apache::AuthCommit
+    # for apache 2.2
+    AuthBasicProvider Pushmi::Apache::RelayProvider
   </LimitExcept>
 
 =back
@@ -185,7 +194,7 @@ L<Log::Log4perl::Config> for complete reference.
 
 =head1 LICENSE
 
-Copyright 2006 Best Practical Solutions, LLC.
+Copyright 2006-2007 Best Practical Solutions, LLC.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

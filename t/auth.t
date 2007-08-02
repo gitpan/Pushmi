@@ -19,6 +19,7 @@ my $apache_root = rel2abs(catdir ('t', 'apache_master'));
 my ($passwd, $policy) = map { catfile($apache_root, $_) }
                           qw/svnpasswd svnpolicy/;
 
+# XXX: write a test which wouldn't fail only if we have svnpolicy
 my ( $master, $master_url ) = get_dav_server(
     apache_root => rel2abs( catdir( 't', 'apache_master' ) ),
     repospath   => $masterdepot->repospath,
@@ -64,13 +65,13 @@ start_memcached();
 my ($perlbal_url, $perlbal_port) = ($slave_url, 5009);
 diag $perlbal_url;
 
-run_pushmi('mirror', '--init', $slavedepot->repospath, $master_url);
+run_pushmi('mirror', $slavedepot->repospath, $master_url);
 system('svn', 'mkdir', '--non-interactive', '--no-auth-cache', '--username' => 'mirror', '--password' => 'secret', -m => 'mkdir', "$master_url/X");
 
-run_pushmi('mirror', '--sync', $slavedepot->repospath);
+run_pushmi('sync', $slavedepot->repospath);
 is_svn_output(['mkdir', '--non-interactive', '--no-auth-cache', '--username' => 'test', '--password' => 'test', -m => 'mkdir', "$perlbal_url/orzzzz"],
 	      [],
-	      [qq{svn: CHECKOUT of '/svn/!svn/ver/3/': 403 Forbidden (http://localhost:$perlbal_port)}]);
+	      [qr{svn: .*403 Forbidden}]);
 
 #sleep 1 while 1;
 is_svn_output(['mkdir', '--non-interactive', '--no-auth-cache', '--username' => 'test', '--password' => 'test', -m => 'mkdir', "$perlbal_url/X/mmmm"],

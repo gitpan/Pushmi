@@ -80,7 +80,7 @@ is_svn_output(['ci', -m => 'trying to commit outdated change from svn'],
 	      ['Sending        fromsvn.txt',
 	       'Transmitting file data .'],
 	      ['svn: Commit failed (details follow):',
-	       q{svn: 'pre-commit' hook failed with error output:},
+	       qr{svn: 'pre-commit' hook failed.*:},
 	       q{Out of date: 'fromsvn.txt' in transaction '5-1'}, '']);
 
 is($srepos->fs->youngest_rev, 5, "svn didn't commit through");
@@ -94,9 +94,12 @@ is_svn_output(['ci', -m => 'trying to commit outdated change from svn'],
 is_svn_output(['up'],
 	      ['C    fromsvn.txt',
 	       'Updated to revision 5.']);
-ok(-e 'fromsvn.txt.mine', 'conflict in svn up');
+# svn 1.5 changes the conflict tmp file
+my $conflict_mine = -e 'fromsvn.txt.mine.txt' ? 'fromsvn.txt.mine.txt' : 'fromsvn.txt.mine';
+ok(-e $conflict_mine, 'conflict in svn up');
+
 unlink('fromsvn.txt');
-rename('fromsvn.txt.mine', 'fromsvn.txt');
+rename($conflict_mine, 'fromsvn.txt');
 is_svn_output(['resolved', 'fromsvn.txt'],
 	      [q{Resolved conflicted state of 'fromsvn.txt'}]);
 is_svn_output(['ci', -m => 'commit merged change from svn'],

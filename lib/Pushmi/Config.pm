@@ -12,7 +12,7 @@ sub config {
 
     my $file = $ENV{PUSHMI_CONFIG} || '/etc/pushmi.conf';
     unless (-e $file) {
-	warn "pushmi config $file doesn't exist";
+	warn "pushmi config $file doesn't exist.\n";
 	return $config = {};
     }
 

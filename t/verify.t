@@ -97,7 +97,7 @@ is_svn_output(['ci', -m => 'add fromsvn'],
 	      ['Sending        fromsvn.txt',
 	       'Transmitting file data .'],
 	      ['svn: Commit failed (details follow):',
-	       q|svn: 'pre-commit' hook failed with error output:|,
+	       qr{svn: 'pre-commit' hook failed.*:},
 	       "Pushmi slave in inconsistency.  Please use the master repository at $uri",
 	       'and contact your administrator.  Sorry for the inconveniences.', '']);
 
