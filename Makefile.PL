@@ -19,11 +19,11 @@ auto_install();
 
 makemaker_args( test => { TESTS => join ' ', "t/*.t", "t/*/*.t"});
 
-WriteAll;
+WriteAll( sign => 1 );
 
 warn <<EOF;
 **********************************************************************
 ***** If you are using apache 2.2, you need to have Apache::AuthenHook
-***** installed.  See README for configuration help.
+***** installed for relayed auth.  See README for configuration help.
 
 EOF

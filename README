@@ -100,6 +100,9 @@ AUTHENTICATION
           PerlSetVar SVNPath /var/db/my-local-mirror
           PerlSetVar Pushmi /usr/local/bin/pushmi
           PerlSetVar PushmiConfig /etc/pushmi.conf
+
+          PerlLoadModule Apache::AuthenHook # for apache 2.2
+
           <LimitExcept GET PROPFIND OPTIONS REPORT>
             AuthName "Subversion repository for projectX"
             AuthType Basic

@@ -1,6 +1,6 @@
 package Pushmi;
 use strict;
-use version; our $VERSION = qv(0.99_5);
+use version; our $VERSION = qv(1.0.0);
 
 1;
 
@@ -124,6 +124,9 @@ config in C<httpd.conf>:
   PerlSetVar SVNPath /var/db/my-local-mirror
   PerlSetVar Pushmi /usr/local/bin/pushmi
   PerlSetVar PushmiConfig /etc/pushmi.conf
+
+  PerlLoadModule Apache::AuthenHook # for apache 2.2
+
   <LimitExcept GET PROPFIND OPTIONS REPORT>
     AuthName "Subversion repository for projectX"
     AuthType Basic

@@ -22,9 +22,9 @@ requires:
   YAML::Syck: 0
   version: 0
 version: !!perl/hash:version 
-  original: v0.995
+  original: v1.0.0
   qv: 1
   version: 
+    - 1
     - 0
-    - 995
     - 0

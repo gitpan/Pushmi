@@ -45,3 +45,4 @@ t/pushmi-log.conf
 t/pushmi.conf
 t/verify.t
 utils/verify-mirror
+SIGNATURE                                Public-key signature (added by MakeMaker)
